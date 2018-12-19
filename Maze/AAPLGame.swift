@@ -10,13 +10,13 @@ import SpriteKit
 import GameplayKit
 
 enum ContactCategory: UInt32 {
-    case Player = 2
-    case Enemy = 4
+    case player = 2
+    case enemy = 4
 }
 
 class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
     
-    private var _scene: AAPLScene?
+    fileprivate var _scene: AAPLScene?
     
     var level: AAPLLevel!
     
@@ -24,20 +24,20 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
     
     var player: AAPLEntity
     
-    var intelligenceSystem: GKComponentSystem
+    var intelligenceSystem: GKComponentSystem<GKComponent>
     
-    var prevUpdateTime: NSTimeInterval = 0
+    var prevUpdateTime: TimeInterval = 0
     
     var playerDirection: AAPLPlayerDirection {
         get {
-            if let component = player.componentForClass(AAPLPlayerControlComponent) {
+            if let component = player.component(ofType: AAPLPlayerControlComponent) {
                 return component.direction
             } else {
-                return .None
+                return .none
             }
         }
         set {
-            if let component = player.componentForClass(AAPLPlayerControlComponent) {
+            if let component = player.component(ofType: AAPLPlayerControlComponent) {
                 component.attemptedDirection = newValue
             }
         }
@@ -45,7 +45,7 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
     
     var hasPowerup: Bool = false {
         willSet {
-            let powerupDuration: NSTimeInterval = 10
+            let powerupDuration: TimeInterval = 10
             if self.hasPowerup != newValue {
                 var nextState: AnyClass
                 if newValue {
@@ -55,7 +55,7 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
                 }
                 
                 for component in self.intelligenceSystem.components {
-                    (component as! AAPLIntelligenceComponent).stateMachine.enterState(nextState)
+                    (component as! AAPLIntelligenceComponent).stateMachine.enter(nextState)
                 }
                 powerupTimeRemaining = powerupDuration
             }
@@ -79,11 +79,11 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         // Create player entity with display and control component.
         player = AAPLEntity()
         player.gridPosition = (level.startPosition?.gridPosition)!
-        player.addComponent(AAPLSpriteComponent(withDefaultColor: SKColor.cyanColor()))
+        player.addComponent(AAPLSpriteComponent(withDefaultColor: SKColor.cyan))
         player.addComponent(AAPLPlayerControlComponent(withLevel: level))
         
         // Create enemy entities with display and AI components.
-        let colors = [SKColor.redColor(), SKColor.greenColor(), SKColor.yellowColor(), SKColor.magentaColor()]
+        let colors = [SKColor.red, SKColor.green, SKColor.yellow, SKColor.magenta]
         intelligenceSystem = GKComponentSystem(componentClass: AAPLIntelligenceComponent.self)
         enemies = []
         
@@ -95,7 +95,7 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
             enemy.gridPosition = node.gridPosition
             enemy.addComponent(AAPLSpriteComponent(withDefaultColor: colors[i]))
             enemy.addComponent(AAPLIntelligenceComponent(withGame: self, enemy: enemy, origin: node))
-            intelligenceSystem.addComponentWithEntity(enemy)
+            intelligenceSystem.addComponent(foundIn: enemy)
             enemies.append(enemy)
         }
     }
@@ -103,10 +103,10 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
     var scene: SKScene {
         get {
             if _scene == nil {
-                _scene = AAPLScene(size: CGSizeMake(CGFloat(level.width) * AAPLCellWidth, CGFloat(level.height) * AAPLCellWidth))
+                _scene = AAPLScene(size: CGSize(width: CGFloat(level.width) * AAPLCellWidth, height: CGFloat(level.height) * AAPLCellWidth))
                 
                 _scene!.aaplDelegate = self
-                _scene!.physicsWorld.gravity = CGVectorMake(0, 0)
+                _scene!.physicsWorld.gravity = CGVector(dx: 0, dy: 0)
                 _scene!.physicsWorld.contactDelegate = self
             }
             
@@ -114,20 +114,20 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         }
     }
     
-    func didMoveToView(scene: AAPLScene, view: SKView) {
-        scene.backgroundColor = SKColor.blackColor()
+    func didMoveToView(_ scene: AAPLScene, view: SKView) {
+        scene.backgroundColor = SKColor.black
         
         // Generate maze.
         let maze = SKNode()
-        let cellSize = CGSizeMake(AAPLCellWidth, AAPLCellWidth);
+        let cellSize = CGSize(width: AAPLCellWidth, height: AAPLCellWidth);
         
         if let graph = level.pathfindingGraph {
             for i in 0..<level.width {
                 for j in 0..<level.height {
-                    if graph.nodeAtGridPosition(vector_int2(Int32(i), Int32(j))) != nil {
+                    if graph.node(atGridPosition: vector_int2(Int32(i), Int32(j))) != nil {
                         // Make nodes for traversable areas; leave walls as background color.
-                        let node = SKSpriteNode(color: SKColor.grayColor(), size: cellSize)
-                        node.position = CGPointMake(CGFloat(i) * AAPLCellWidth + AAPLCellWidth / 2, CGFloat(j) * AAPLCellWidth  + AAPLCellWidth / 2)
+                        let node = SKSpriteNode(color: SKColor.gray, size: cellSize)
+                        node.position = CGPoint(x: CGFloat(i) * AAPLCellWidth + AAPLCellWidth / 2, y: CGFloat(j) * AAPLCellWidth  + AAPLCellWidth / 2)
                         maze.addChild(node)
                     }
                 }
@@ -137,9 +137,9 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         scene.addChild(maze)
         
         // Add player entity to scene.
-        let playerComponent = player.componentForClass(AAPLSpriteComponent)
+        let playerComponent = player.component(ofType: AAPLSpriteComponent)
         
-        let sprite = AAPLSpriteNode(color: SKColor.cyanColor(), size: cellSize)
+        let sprite = AAPLSpriteNode(color: SKColor.cyan, size: cellSize)
         sprite.owner = playerComponent
         sprite.position = scene.pointForGridPosition(player.gridPosition)
         sprite.zRotation = CGFloat(M_PI_4)
@@ -147,8 +147,8 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         sprite.yScale = CGFloat(M_SQRT1_2)
         
         let body = SKPhysicsBody(circleOfRadius: AAPLCellWidth / 2)
-        body.categoryBitMask = ContactCategory.Player.rawValue
-        body.contactTestBitMask = ContactCategory.Enemy.rawValue
+        body.categoryBitMask = ContactCategory.player.rawValue
+        body.contactTestBitMask = ContactCategory.enemy.rawValue
         body.collisionBitMask = 0
         
         sprite.physicsBody = body
@@ -157,14 +157,14 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         
         // Add enemy entities to scene.
         for entity in enemies {
-            if let enemyComponent = entity.componentForClass(AAPLSpriteComponent) {
+            if let enemyComponent = entity.component(ofType: AAPLSpriteComponent) {
                 enemyComponent.sprite = AAPLSpriteNode(color: enemyComponent.defaultColor, size: cellSize)
                 enemyComponent.sprite?.owner = enemyComponent
                 enemyComponent.sprite?.position = scene.pointForGridPosition(entity.gridPosition)
                 
                 let body = SKPhysicsBody(circleOfRadius: AAPLCellWidth / 2 )
-                body.categoryBitMask = ContactCategory.Enemy.rawValue
-                body.contactTestBitMask = ContactCategory.Player.rawValue
+                body.categoryBitMask = ContactCategory.enemy.rawValue
+                body.contactTestBitMask = ContactCategory.player.rawValue
                 body.collisionBitMask = 0
                 enemyComponent.sprite?.physicsBody = body
                 
@@ -173,7 +173,7 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         }
     }
     
-    func update(currentTime: NSTimeInterval, forScene scene: SKScene) {
+    func update(_ currentTime: TimeInterval, for scene: SKScene) {
         // Track the time delta since the last update.
         if prevUpdateTime < 0 {
             prevUpdateTime = currentTime
@@ -186,17 +186,17 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         powerupTimeRemaining -= dt
         
         // Update components with the new time delta.
-        intelligenceSystem.updateWithDeltaTime(dt)
-        player.updateWithDeltaTime(dt)
+        intelligenceSystem.update(deltaTime: dt)
+        player.update(deltaTime: dt)
     }
     
-    func didBeginContact(contact: SKPhysicsContact) {
+    func didBegin(_ contact: SKPhysicsContact) {
         var enemyNode: AAPLSpriteNode?
-        if contact.bodyA.categoryBitMask == ContactCategory.Enemy.rawValue {
+        if contact.bodyA.categoryBitMask == ContactCategory.enemy.rawValue {
             enemyNode = contact.bodyA.node as? AAPLSpriteNode
         }
         
-        if contact.bodyB.categoryBitMask == ContactCategory.Enemy.rawValue {
+        if contact.bodyB.categoryBitMask == ContactCategory.enemy.rawValue {
             enemyNode = contact.bodyB.node as? AAPLSpriteNode
         }
         
@@ -204,25 +204,25 @@ class AAPLGame: NSObject, AAPLSceneDelegate, SKPhysicsContactDelegate {
         
         // If the player contacts an enemy that's in the Chase state, the player is attackeed.
         let entity = enemyNode?.owner?.entity
-        if let aiComponent = entity?.componentForClass(AAPLIntelligenceComponent) {
-            if aiComponent.stateMachine.currentState!.isKindOfClass(AAPLEnemyChaseState) {
+        if let aiComponent = entity?.component(ofType: AAPLIntelligenceComponent) {
+            if aiComponent.stateMachine.currentState!.isKind(of: AAPLEnemyChaseState.self) {
                 self.playerAttacked()
             } else {
                 // Otherwise, that enemy enters the Defeated state only if in a state that allows that transition.
-                aiComponent.stateMachine.enterState(AAPLEnemyDefeatedState)
+                aiComponent.stateMachine.enter(AAPLEnemyDefeatedState)
             }
         }
     }
     
     func playerAttacked() {
         // Warp player back to starting point.
-        if let spriteComponent = player.componentForClass(AAPLSpriteComponent) {
+        if let spriteComponent = player.component(ofType: AAPLSpriteComponent) {
             spriteComponent.warpToGridPosition((level.startPosition?.gridPosition)!)
         }
         
-        if let controlComponent = player.componentForClass(AAPLPlayerControlComponent) {
-            controlComponent.direction = .None
-            controlComponent.attemptedDirection = .None
+        if let controlComponent = player.component(ofType: AAPLPlayerControlComponent) {
+            controlComponent.direction = .none
+            controlComponent.attemptedDirection = .none
         }
     }
 }

@@ -12,23 +12,23 @@ class AAPLEnemyDefeatedState: AAPLEnemyState {
     
     var respawnPosition: GKGridGraphNode?
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return stateClass == AAPLEnemyRespawnState.self
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
+    override func didEnter(from previousState: GKState?) {
         // Change the enemy sprite's appearance to indicate defeat.
-        if let component = entity.componentForClass(AAPLSpriteComponent) {
+        if let component = entity.component(ofType: AAPLSpriteComponent) {
             component.useDefeatedAppearance()
             
             // Use pathfinding to find a route back to this enemy's starting position.
             if let graph = self.game?.level.pathfindingGraph {
-                if let enemyNode = graph.nodeAtGridPosition(self.entity.gridPosition) {
+                if let enemyNode = graph.node(atGridPosition: self.entity.gridPosition) {
                     if let respawnPosition = self.respawnPosition {
-                        let path = graph.findPathFromNode(enemyNode, toNode: respawnPosition) as! [GKGridGraphNode]
+                        let path = graph.findPath(from: enemyNode, to: respawnPosition) as! [GKGridGraphNode]
                         
                         component.followPath(path, completionHandler: { () -> Void in
-                            self.stateMachine?.enterState(AAPLEnemyRespawnState)
+                            self.stateMachine?.enter(AAPLEnemyRespawnState)
                         })
                     }
                 }

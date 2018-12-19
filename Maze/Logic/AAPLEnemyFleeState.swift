@@ -12,29 +12,29 @@ class AAPLEnemyFleeState: AAPLEnemyState {
     
     var target: GKGridGraphNode?
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return stateClass == AAPLEnemyChaseState.self ||
             stateClass == AAPLEnemyDefeatedState.self
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        if let component = entity.componentForClass(AAPLSpriteComponent) {
+    override func didEnter(from previousState: GKState?) {
+        if let component = entity.component(ofType: AAPLSpriteComponent) {
             component.useFleeAppearance()
         }
         
         // Choose a location to flee towards.
         if let game = game {
-            target = game.random.arrayByShufflingObjectsInArray((game.level.enemyStartPositions)!).first as? GKGridGraphNode
+            target = game.random.arrayByShufflingObjects(in: (game.level.enemyStartPositions)!).first as? GKGridGraphNode
         }
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         let position = entity.gridPosition
         
         if let target = target {
             if (position.x == target.gridPosition.x && position.y == target.gridPosition.y) {
                 if let game = game {
-                    self.target = game.random.arrayByShufflingObjectsInArray((game.level.enemyStartPositions)!).first as? GKGridGraphNode
+                    self.target = game.random.arrayByShufflingObjects(in: (game.level.enemyStartPositions)!).first as? GKGridGraphNode
                 }
             }
             

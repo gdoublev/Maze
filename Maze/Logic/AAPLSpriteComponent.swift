@@ -16,13 +16,13 @@ class AAPLSpriteComponent: GKComponent {
     var pulseEffectEnabled: Bool = false {
         didSet {
             if (pulseEffectEnabled) {
-                let grow = SKAction.scaleBy(1.5, duration: 0.5)
-                let sequence = SKAction.sequence([grow, grow.reversedAction()])
+                let grow = SKAction.scale(by: 1.5, duration: 0.5)
+                let sequence = SKAction.sequence([grow, grow.reversed()])
                 
-                sprite?.runAction(SKAction.repeatActionForever(sequence), withKey: "pulse")
+                sprite?.run(SKAction.repeatForever(sequence), withKey: "pulse")
             } else {
-                sprite?.removeActionForKey("pulse")
-                sprite?.runAction(SKAction.scaleTo(1.0, duration: 0.5))
+                sprite?.removeAction(forKey: "pulse")
+                sprite?.run(SKAction.scale(to: 1.0, duration: 0.5))
             }
         }
     }
@@ -33,14 +33,14 @@ class AAPLSpriteComponent: GKComponent {
 //                self.nextGridPosition = newValue
                 
                 if let scene = sprite?.scene as? AAPLScene {
-                    let action = SKAction.moveTo(scene.pointForGridPosition(nextGridPosition), duration: 0.35)
-                    let update = SKAction.runBlock({ () -> Void in
+                    let action = SKAction.move(to: scene.pointForGridPosition(nextGridPosition), duration: 0.35)
+                    let update = SKAction.run({ () -> Void in
                         if let entity = self.entity as? AAPLEntity {
                             entity.gridPosition = self.self.nextGridPosition
                         }
                     })
                     
-                    sprite?.runAction(SKAction.sequence([action, update]), withKey: "move")
+                    sprite?.run(SKAction.sequence([action, update]), withKey: "move")
                 }
             }
         }
@@ -51,35 +51,39 @@ class AAPLSpriteComponent: GKComponent {
         
         super.init()
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     func useNormalAppearance() {
         sprite?.color = defaultColor
     }
     
     func useFleeAppearance() {
-        sprite?.color = SKColor.whiteColor()
+        sprite?.color = SKColor.white
     }
     
     func useDefeatedAppearance() {
-        sprite?.runAction(SKAction.scaleTo(0.25, duration: 0.25))
+        sprite?.run(SKAction.scale(to: 0.25, duration: 0.25))
     }
     
-    func warpToGridPosition(gridPosition: vector_int2) {
+    func warpToGridPosition(_ gridPosition: vector_int2) {
         if let scene = sprite?.scene as? AAPLScene {
-            let fadeOut = SKAction.fadeOutWithDuration(0.5)
-            let warp = SKAction.moveTo(scene.pointForGridPosition(gridPosition), duration: 0.5)
-            let fadeIn = SKAction.fadeInWithDuration(0.5)
-            let update = SKAction.runBlock({ () -> Void in
+            let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+            let warp = SKAction.move(to: scene.pointForGridPosition(gridPosition), duration: 0.5)
+            let fadeIn = SKAction.fadeIn(withDuration: 0.5)
+            let update = SKAction.run({ () -> Void in
                 if let entity = self.entity as? AAPLEntity {
                     entity.gridPosition = gridPosition
                 }
             })
             
-            sprite?.runAction(SKAction.sequence([fadeOut, update, warp, fadeIn]))
+            sprite?.run(SKAction.sequence([fadeOut, update, warp, fadeIn]))
         }
     }
     
-    func followPath(path: [GKGridGraphNode], completionHandler: (() -> Void)) {
+    func followPath(_ path: [GKGridGraphNode], completionHandler: @escaping (() -> Void)) {
         // Ignore the first node in the path -- it's the starting position.
         let dropFirst = path[1..<path.count]
         var sequence: [SKAction] = []
@@ -87,16 +91,16 @@ class AAPLSpriteComponent: GKComponent {
         for node in dropFirst {
             if let scene = sprite?.scene as? AAPLScene {
                 let point = scene.pointForGridPosition(node.gridPosition)
-                sequence.append(SKAction.moveTo(point, duration: 0.15))
-                sequence.append(SKAction.runBlock({ () -> Void in
+                sequence.append(SKAction.move(to: point, duration: 0.15))
+                sequence.append(SKAction.run({ () -> Void in
                     if let entity = self.entity as? AAPLEntity {
                         entity.gridPosition = node.gridPosition
                     }
                 }))
             }
             
-            sequence.append(SKAction.runBlock(completionHandler))
-            sprite?.runAction(SKAction.sequence(sequence))
+            sequence.append(SKAction.run(completionHandler))
+            sprite?.run(SKAction.sequence(sequence))
         }
     }
 }

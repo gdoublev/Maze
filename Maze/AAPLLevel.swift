@@ -9,10 +9,10 @@
 import GameplayKit
 
 enum TileType: Int {
-    case Open = 0
-    case Wall = 1
-    case Portal = 2
-    case Start = 3
+    case open = 0
+    case wall = 1
+    case portal = 2
+    case start = 3
 }
 
 let AAPLMazeWidth: Int = 32
@@ -56,7 +56,7 @@ class AAPLLevel: NSObject {
     
     var startPosition: GKGridGraphNode?
     var enemyStartPositions: [GKGridGraphNode]?
-    var pathfindingGraph: GKGridGraph?
+    var pathfindingGraph: GKGridGraph<GKGridGraphNode>?
     
     var width: Int {
         get {
@@ -79,24 +79,24 @@ class AAPLLevel: NSObject {
         for i in 0..<AAPLMazeWidth {
             for j in 0..<AAPLMazeHeight {
                 let tile = tileAtRole(i, column: j)
-                if tile == TileType.Wall.rawValue {
-                    wall.append(graph.nodeAtGridPosition(vector_int2(Int32(i), Int32(j)))!)
-                } else if tile == TileType.Portal.rawValue {
-                    spawnPoints.append(graph.nodeAtGridPosition(vector_int2(Int32(i), Int32(j)))!)
-                } else if tile == TileType.Start.rawValue {
-                    startPosition = graph.nodeAtGridPosition(vector_int2(Int32(i), Int32(j)))!
+                if tile == TileType.wall.rawValue {
+                    wall.append(graph.node(atGridPosition: vector_int2(Int32(i), Int32(j)))!)
+                } else if tile == TileType.portal.rawValue {
+                    spawnPoints.append(graph.node(atGridPosition: vector_int2(Int32(i), Int32(j)))!)
+                } else if tile == TileType.start.rawValue {
+                    startPosition = graph.node(atGridPosition: vector_int2(Int32(i), Int32(j)))!
                 }
             }
         }
         
-        graph.removeNodes(wall)
+        graph.remove(wall)
         
         enemyStartPositions = spawnPoints
         
         pathfindingGraph = graph
     }
     
-    func tileAtRole(row: Int, column col: Int) -> Int {
+    func tileAtRole(_ row: Int, column col: Int) -> Int {
         return Maze[row * AAPLMazeHeight + col]
     }
 }

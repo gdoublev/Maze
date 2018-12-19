@@ -10,30 +10,30 @@ import GameplayKit
 
 class AAPLEnemyRespawnState: AAPLEnemyState {
 
-    var timeRemaining: NSTimeInterval = 10
+    var timeRemaining: TimeInterval = 10
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return stateClass == AAPLEnemyChaseState.self
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
+    override func didEnter(from previousState: GKState?) {
         timeRemaining = 10
         
-        if let component = entity.componentForClass(AAPLSpriteComponent) {
+        if let component = entity.component(ofType: AAPLSpriteComponent) {
             component.pulseEffectEnabled = true
         }
     }
     
-    override func willExitWithNextState(nextState: GKState) {
-        if let component = entity.componentForClass(AAPLSpriteComponent) {
+    override func willExit(to nextState: GKState) {
+        if let component = entity.component(ofType: AAPLSpriteComponent) {
             component.pulseEffectEnabled = false
         }
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         self.timeRemaining -= seconds
         if self.timeRemaining < 0 {
-            stateMachine?.enterState(AAPLEnemyChaseState)
+            stateMachine?.enter(AAPLEnemyChaseState)
         }
     }
 }

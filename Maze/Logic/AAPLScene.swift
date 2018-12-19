@@ -11,24 +11,24 @@ import SpriteKit
 let AAPLCellWidth: CGFloat = 27.0
 
 protocol AAPLSceneDelegate : SKSceneDelegate {
-    func didMoveToView(scene: AAPLScene, view: SKView)
+    func didMoveToView(_ scene: AAPLScene, view: SKView)
 }
 
 class AAPLScene: SKScene {
     
     var aaplDelegate: AAPLSceneDelegate?
     
-    func pointForGridPosition(position: vector_int2) -> CGPoint {
-        return CGPointMake(CGFloat(position.x) * AAPLCellWidth + AAPLCellWidth / 2, CGFloat(position.y) * AAPLCellWidth  + AAPLCellWidth / 2);
+    func pointForGridPosition(_ position: vector_int2) -> CGPoint {
+        return CGPoint(x: CGFloat(position.x) * AAPLCellWidth + AAPLCellWidth / 2, y: CGFloat(position.y) * AAPLCellWidth  + AAPLCellWidth / 2);
     }
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         aaplDelegate?.didMoveToView(self, view: view)
     }
     
-    override func update(currentTime: NSTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
         if let game = aaplDelegate as? AAPLGame {
-            game.update(currentTime, forScene: self)
+            game.update(currentTime, for: self)
         }
     }
 }

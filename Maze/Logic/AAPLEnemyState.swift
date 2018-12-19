@@ -21,17 +21,17 @@ class AAPLEnemyState: GKState {
         super.init()
     }
     
-    func pathToNode(node: GKGridGraphNode) -> [GKGridGraphNode] {
+    func pathToNode(_ node: GKGridGraphNode) -> [GKGridGraphNode] {
         if let graph = game?.level.pathfindingGraph {
-            if let enemyNode = graph.nodeAtGridPosition(entity.gridPosition) {
-                return graph.findPathFromNode(enemyNode, toNode: node) as! [GKGridGraphNode]
+            if let enemyNode = graph.node(atGridPosition: entity.gridPosition) {
+                return graph.findPath(from: enemyNode, to: node) as! [GKGridGraphNode]
             }
         }
         
         return []
     }
     
-    func startFollowingPath(path: [GKGridGraphNode]) {
+    func startFollowingPath(_ path: [GKGridGraphNode]) {
         /*
             Set up a move to the first node on the path, but
             no farther because the next update will recalculate the path.
@@ -39,7 +39,7 @@ class AAPLEnemyState: GKState {
         
         if path.count > 1 {
             let firstMove = path[1]
-            if let component = entity.componentForClass(AAPLSpriteComponent) {
+            if let component = entity.component(ofType: AAPLSpriteComponent) {
                 component.nextGridPosition = firstMove.gridPosition
             }
         }

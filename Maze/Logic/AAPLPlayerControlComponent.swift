@@ -9,22 +9,22 @@
 import GameplayKit
 
 enum AAPLPlayerDirection {
-    case None, Left, Right, Down, Up
+    case none, left, right, down, up
 }
 
 class AAPLPlayerControlComponent: GKComponent {
     var level: AAPLLevel
     
-    var direction: AAPLPlayerDirection = .None {
+    var direction: AAPLPlayerDirection = .none {
         willSet {
             var proposedNode: GKGridGraphNode?
-            if self.direction == .None {
+            if self.direction == .none {
                 if let nextNode = self.nextNode {
                     proposedNode = self.nodeInDirection(newValue, fromNode: nextNode)
                 }
             } else {
                 if let entity = self.entity as? AAPLEntity {
-                    let currentNode = self.level.pathfindingGraph?.nodeAtGridPosition(entity.gridPosition)
+                    let currentNode = self.level.pathfindingGraph?.node(atGridPosition: entity.gridPosition)
                     proposedNode = self.nodeInDirection(newValue, fromNode: currentNode!)
                 }
             }
@@ -35,7 +35,7 @@ class AAPLPlayerControlComponent: GKComponent {
         }
     }
     
-    var attemptedDirection: AAPLPlayerDirection = .None
+    var attemptedDirection: AAPLPlayerDirection = .none
     
     var nextNode: GKGridGraphNode?
     
@@ -44,36 +44,40 @@ class AAPLPlayerControlComponent: GKComponent {
         
         super.init()
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
-    func nodeInDirection(direction: AAPLPlayerDirection, fromNode node: GKGridGraphNode) -> GKGridGraphNode? {
+    func nodeInDirection(_ direction: AAPLPlayerDirection, fromNode node: GKGridGraphNode) -> GKGridGraphNode? {
         var nextPosition: vector_int2
         switch (direction) {
-        case .Left:
+        case .left:
             nextPosition = vector_int2(node.gridPosition.x - 1, node.gridPosition.y)
             break
             
-        case .Right:
+        case .right:
             nextPosition = vector_int2(node.gridPosition.x + 1, node.gridPosition.y)
             break
             
-        case .Down:
+        case .down:
             nextPosition = vector_int2(node.gridPosition.x, node.gridPosition.y - 1)
             break
             
-        case .Up:
+        case .up:
             nextPosition = vector_int2(node.gridPosition.x, node.gridPosition.y + 1)
             break
             
-        case .None:
+        case .none:
             return nil
         }
         
-        return level.pathfindingGraph?.nodeAtGridPosition(nextPosition)
+        return level.pathfindingGraph?.node(atGridPosition: nextPosition)
     }
     
     func makeNextMove() {
         if let entity = entity as? AAPLEntity {
-            let currentNode = level.pathfindingGraph?.nodeAtGridPosition(entity.gridPosition)
+            let currentNode = level.pathfindingGraph?.node(atGridPosition: entity.gridPosition)
             let nextNode = nodeInDirection(direction, fromNode: currentNode!)
             let attemptedNode = nodeInDirection(self.attemptedDirection, fromNode: currentNode!)
             
@@ -81,7 +85,7 @@ class AAPLPlayerControlComponent: GKComponent {
                 // Move in the attempted direction.
                 direction = self.self.attemptedDirection
                 self.nextNode = attemptedNode!
-                if let component = entity.componentForClass(AAPLSpriteComponent) {
+                if let component = entity.component(ofType: AAPLSpriteComponent) {
                     component.nextGridPosition = self.nextNode!.gridPosition
                 }
             } else if ((attemptedNode == nil) && (nextNode != nil)) {
@@ -89,17 +93,17 @@ class AAPLPlayerControlComponent: GKComponent {
                 let dir = self.direction
                 self.direction = dir
                 self.nextNode = nextNode!
-                if let component = entity.componentForClass(AAPLSpriteComponent) {
+                if let component = entity.component(ofType: AAPLSpriteComponent) {
                     component.nextGridPosition = self.nextNode!.gridPosition
                 }
             } else {
                 // Can't move any more.
-                direction = .None
+                direction = .none
             }
         }
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         makeNextMove()
     }
 }

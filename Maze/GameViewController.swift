@@ -19,7 +19,7 @@ class GameViewController: UIViewController {
         // Create the game and its SpriteKit scene.
         game = AAPLGame()
         if let scene = game?.scene {
-            scene.scaleMode = .AspectFit
+            scene.scaleMode = .aspectFit
             
             // Present the scene and configure the SpriteKit view.
             let skView = self.view as! SKView
@@ -30,23 +30,23 @@ class GameViewController: UIViewController {
         }
     }
     
-    @IBAction func swipeUp(sender: AnyObject) {
-        game?.playerDirection = .Up
+    @IBAction func swipeUp(_ sender: AnyObject) {
+        game?.playerDirection = .up
     }
     
-    @IBAction func swipeRight(sender: AnyObject) {
-        game?.playerDirection = .Right
+    @IBAction func swipeRight(_ sender: AnyObject) {
+        game?.playerDirection = .right
     }
     
-    @IBAction func swipeDown(sender: AnyObject) {
-        game?.playerDirection = .Down
+    @IBAction func swipeDown(_ sender: AnyObject) {
+        game?.playerDirection = .down
     }
     
-    @IBAction func swipeLeft(sender: AnyObject) {
-        game?.playerDirection = .Left
+    @IBAction func swipeLeft(_ sender: AnyObject) {
+        game?.playerDirection = .left
     }
     
-    @IBAction func tap(sender: AnyObject) {
+    @IBAction func tap(_ sender: AnyObject) {
         game?.hasPowerup = true
     }
     

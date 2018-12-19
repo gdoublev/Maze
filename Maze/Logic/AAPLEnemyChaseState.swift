@@ -18,7 +18,7 @@ class AAPLEnemyChaseState: AAPLEnemyState {
             if self.hunting != newValue {
                 if(!newValue) {
                     if let game = self.game {
-                        let positions = game.random.arrayByShufflingObjectsInArray(game.level.enemyStartPositions!)
+                        let positions = game.random.arrayByShufflingObjects(in: game.level.enemyStartPositions!)
                         self.scatterTarget = positions.first as? GKGridGraphNode
                     }
                 }
@@ -33,17 +33,17 @@ class AAPLEnemyChaseState: AAPLEnemyState {
         ruleSystem = GKRuleSystem()
         
         let playerFar = NSPredicate(format: "$distanceToPlayer.floatValue >= 10.0")
-        ruleSystem.addRule(GKRule(predicate: playerFar, assertingFact: "hunt", grade: 1.0))
+        ruleSystem.add(GKRule(predicate: playerFar, assertingFact: "hunt" as NSObjectProtocol, grade: 1.0))
         
         let playerNear = NSPredicate(format: "$distanceToPlayer.floatValue < 10.0")
-        ruleSystem.addRule(GKRule(predicate: playerNear, retractingFact: "hunt", grade: 1.0))
+        ruleSystem.add(GKRule(predicate: playerNear, retractingFact: "hunt" as NSObjectProtocol, grade: 1.0))
         
         super.init(withGame: game, entity: entity)
     }
     
     func pathToPlayer() -> [GKGridGraphNode] {
         if let graph = game?.level.pathfindingGraph {
-            if let playerNode = graph.nodeAtGridPosition((game?.player.gridPosition)!) {
+            if let playerNode = graph.node(atGridPosition: (game?.player.gridPosition)!) {
                 return self.pathToNode(playerNode)
             }
         }
@@ -51,17 +51,17 @@ class AAPLEnemyChaseState: AAPLEnemyState {
         return []
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return stateClass == AAPLEnemyFleeState.self
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        if let component = entity.componentForClass(AAPLSpriteComponent) {
+    override func didEnter(from previousState: GKState?) {
+        if let component = entity.component(ofType: AAPLSpriteComponent) {
             component.useNormalAppearance()
         }
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         // If the enemy has reached its target, choose a new target.
         let position = entity.gridPosition
         
@@ -72,12 +72,12 @@ class AAPLEnemyChaseState: AAPLEnemyState {
         }
         
         let distanceToPlayer = self.pathToPlayer().count
-        ruleSystem.state["distanceToPlayer"] = NSNumber(integer: distanceToPlayer)
+        ruleSystem.state["distanceToPlayer"] = NSNumber(value: distanceToPlayer as Int)
         
         ruleSystem.reset()
         ruleSystem.evaluate()
         
-        hunting = (self.ruleSystem.gradeForFact("hunt") > 0.0)
+        hunting = (self.ruleSystem.grade(forFact: "hunt" as NSObjectProtocol) > 0.0)
         if hunting {
             startFollowingPath(pathToPlayer())
         } else {

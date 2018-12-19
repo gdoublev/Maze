@@ -30,12 +30,16 @@ class AAPLIntelligenceComponent: GKComponent {
         let respawn = AAPLEnemyRespawnState(withGame: game, entity: enemy)
         
         stateMachine = GKStateMachine(states: [chase, flee, defeated, respawn])
-        stateMachine.enterState(AAPLEnemyChaseState)
+        stateMachine.enter(AAPLEnemyChaseState)
         
         super.init()
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        stateMachine.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        stateMachine.update(deltaTime: seconds)
     }
 }
